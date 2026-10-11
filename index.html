@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bench Log</title>
+<meta name="description" content="One AI experiment at a time. Real prompts, real builds, including the fails.">
+<meta property="og:title" content="Bench Log">
+<meta property="og:description" content="One AI experiment at a time. Real prompts, real builds, including the fails.">
+<meta property="og:image" content="https://benchlog-ai.github.io/img/og.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2316202B'/%3E%3Crect x='14' y='38' width='36' height='9' fill='%23F5D33F'/%3E%3Ctext x='32' y='44' font-family='Arial Black,Arial' font-weight='900' font-size='30' fill='%23EEF0EA' text-anchor='middle'%3EBL%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Bench Log brand tokens (from brand-kit.html). The page is the notebook: paper, grid, ink, highlighter. */
+:root {
+  --paper: #EEF0EA; --grid: rgba(43, 92, 140, .11); --panel: #FBFCF9;
+  --ink: #16202B; --ink2: #4A5866; --line: #D3D8CE;
+  --pen: #2B5C8C; --hl: #F5D33F; --pass: #2E7D4F; --fail: #C2412D;
+  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11161C; --grid: rgba(141, 180, 222, .07); --panel: #18202A;
+    --ink: #E4E9EE; --ink2: #96A3AF; --line: #27313B; --pen: #8DB4DE; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11161C; --grid: rgba(141, 180, 222, .07); --panel: #18202A;
+  --ink: #E4E9EE; --ink2: #96A3AF; --line: #27313B; --pen: #8DB4DE; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; color: var(--ink); font: 16px/1.6 var(--f-body);
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--pen); outline-offset: 3px; border-radius: 4px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; }
+.mono { font-family: var(--f-mono); }
+.label { font: 600 12px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--pen); }
+
+/* top bar */
+.bar { display: flex; justify-content: space-between; align-items: center; padding-block: 18px; font: 600 12px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; }
+.tag { background: var(--ink); color: var(--paper); padding: 7px 10px; border-radius: 5px; }
+.rec { display: inline-flex; align-items: center; gap: 8px; color: var(--fail); }
+.rec i { width: 9px; height: 9px; border-radius: 50%; background: var(--fail); animation: blink 1.2s steps(2, start) infinite; }
+@keyframes blink { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .rec i { animation: none; } }
+
+/* hero */
+.hero { display: grid; gap: 40px; align-items: center; padding-block: 28px 64px; }
+@media (min-width: 820px) { .hero { grid-template-columns: 1.25fr 1fr; padding-block: 48px 88px; } }
+.word { margin: 0; font: 800 clamp(64px, 17vw, 128px)/.92 var(--f-display); letter-spacing: -.035em; }
+.word .hl { background: linear-gradient(transparent 58%, var(--hl) 58%, var(--hl) 88%, transparent 88%); padding-inline: .04em; }
+/* on dark paper the band moves under the letters, so light ink never sits on yellow */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .word .hl { background: linear-gradient(transparent 86%, var(--hl) 86%, var(--hl) 97%, transparent 97%); } }
+:root[data-theme="dark"] .word .hl { background: linear-gradient(transparent 86%, var(--hl) 86%, var(--hl) 97%, transparent 97%); }
+.lede { margin: 22px 0 6px; font: 500 clamp(21px, 4.4vw, 26px)/1.3 var(--f-body); }
+.sub { margin: 0; font: 400 15px/1.6 var(--f-mono); color: var(--ink2); }
+.ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.btn { display: inline-flex; align-items: center; gap: 9px; min-height: 48px; padding: 12px 20px; border-radius: 999px; font: 600 14px/1 var(--f-mono); text-decoration: none; border: 1.5px solid var(--ink); }
+.btn.solid { background: var(--ink); color: var(--paper); }
+.btn.ghost { background: var(--panel); }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn:hover { transform: translateY(-1px); }
+
+.phone { justify-self: center; width: min(100%, 300px); aspect-ratio: 9 / 16; border-radius: 26px; overflow: hidden; border: 1.5px solid var(--ink); background: #EEF0EA; box-shadow: 0 2px 4px rgba(0,0,0,.08), 0 24px 48px rgba(20,34,49,.16); }
+.phone video { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* sections */
+section { padding-block: 56px; border-top: 1.5px dashed var(--line); }
+h2 { margin: 10px 0 24px; font: 800 clamp(30px, 6vw, 42px)/1.05 var(--f-display); letter-spacing: -.02em; text-wrap: balance; }
+.intro-p { max-width: 60ch; margin: -8px 0 28px; color: var(--ink2); }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: s; }
+@media (min-width: 720px) { .steps { grid-template-columns: repeat(4, 1fr); } }
+.steps li { counter-increment: s; background: var(--panel); border: 1.5px solid var(--ink); border-radius: 12px; padding: 18px; }
+.steps li::before { content: "0" counter(s); display: block; font: 600 12px/1 var(--f-mono); color: var(--pen); margin-bottom: 12px; }
+.steps b { display: inline-block; font: 700 22px/1.1 var(--f-display); background: var(--hl); color: #16202B; padding: 3px 7px; border-radius: 4px; margin-bottom: 8px; }
+.steps span { display: block; font-size: 15px; color: var(--ink2); }
+
+/* the log */
+.log { display: grid; gap: 18px; }
+@media (min-width: 640px) { .log { grid-template-columns: repeat(2, 1fr); } }
+.exp { display: grid; gap: 14px; align-content: start; background: var(--panel); border: 1.5px solid var(--ink); border-radius: 14px; padding: 14px; }
+.exp img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border-radius: 8px; border: 1px solid var(--line); background: #EEF0EA; }
+.exp h3 { margin: 6px 0 6px; font: 800 clamp(19px, 4.6vw, 24px)/1.12 var(--f-display); letter-spacing: -.015em; text-wrap: balance; }
+.exp p { margin: 0 0 12px; font-size: 15px; color: var(--ink2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 11px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 6px 8px; border-radius: 5px; border: 1px solid var(--line); color: var(--ink2); }
+.chip.soon { border-color: var(--pen); color: var(--pen); }
+
+/* steal */
+.steal { display: grid; gap: 18px; }
+@media (min-width: 820px) { .steal { grid-template-columns: 1fr 1fr; align-items: start; } }
+.term { background: #16202B; color: #E4E9EE; border-radius: 12px; padding: 18px; font: 400 14px/1.7 var(--f-mono); overflow-x: auto; white-space: pre; border: 1.5px solid #16202B; }
+.term .c { color: #8DB4DE; }
+.term .p { color: #F5D33F; user-select: none; }
+.note { font-size: 15px; color: var(--ink2); }
+.note strong { color: var(--ink); }
+
+/* footer */
+footer { border-top: 1.5px solid var(--ink); padding-block: 32px 48px; display: grid; gap: 18px; }
+@media (min-width: 720px) { footer { grid-template-columns: 1fr auto; align-items: end; } }
+.links { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 600 14px/1.4 var(--f-mono); }
+.links a { text-decoration-color: var(--hl); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.small { font: 400 12px/1.6 var(--f-mono); color: var(--ink2); margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="bar">
+    <span class="tag">Bench Log</span>
+    <span class="rec"><i></i>Rec</span>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1 class="word">Bench <span class="hl">Log</span></h1>
+        <p class="lede">One AI experiment at a time.</p>
+        <p class="sub">Real prompts. Real builds. Including the fails.</p>
+        <div class="ctas">
+          <a class="btn solid" href="https://www.instagram.com/benchlog.ai/" rel="me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            Follow @benchlog.ai
+          </a>
+          <a class="btn ghost" href="https://github.com/benchlog-ai" rel="me">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+            Plugins on GitHub
+          </a>
+        </div>
+      </div>
+      <div class="phone">
+        <video src="media/intro.mp4" poster="img/intro-poster.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Bench Log intro: a prompt is typed, three experiment cards are stamped worked, in daily use and failed, then the four steps of every post."></video>
+      </div>
+    </div>
+
+    <section aria-labelledby="how">
+      <span class="label">The format</span>
+      <h2 id="how">Every post, same four steps.</h2>
+      <ol class="steps">
+        <li><b>Question</b><span>Something I actually wanted AI to do for me.</span></li>
+        <li><b>Method</b><span>The prompts, the build and the setup, shown as they are.</span></li>
+        <li><b>Result</b><span>What worked, what didn't and what I still use.</span></li>
+        <li><b>Steal this</b><span>The plugin or prompt, so you can run it yourself.</span></li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="log">
+      <span class="label">The log</span>
+      <h2 id="log">Experiments so far</h2>
+      <p class="intro-p">Each one is a Reel and a carousel on Instagram. Newest first.</p>
+      <div class="log">
+        <article class="exp">
+          <img src="img/exp-004-gourmet.jpg" alt="Exp. 004 cover: I gave Claude my food photos" loading="lazy" width="720" height="900">
+          <div>
+            <span class="label">Exp. 004 · Build</span>
+            <h3>I gave Claude my food photos</h3>
+            <p>1,943 food photos and not one restaurant name. Now each meal is named and dated from the photo, with a wishlist and lists I can send a friend.</p>
+            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">6 skills</span><span class="chip soon">Plugin soon</span></div>
+          </div>
+        </article>
+        <article class="exp">
+          <img src="img/exp-003-footprints.jpg" alt="Exp. 003 cover: I gave Claude my travel map" loading="lazy" width="720" height="900">
+          <div>
+            <span class="label">Exp. 003 · Build</span>
+            <h3>I gave Claude my travel map</h3>
+            <p>Where I've been, where I want to go and what to book were spread across notes, a camera roll and a pile of tabs. Now they're one map, plus trip plans.</p>
+            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">6 skills</span><span class="chip soon">Plugin soon</span></div>
+          </div>
+        </article>
+        <article class="exp">
+          <img src="img/exp-002-larder.jpg" alt="Exp. 002 cover: I gave Claude my kitchen shelves" loading="lazy" width="720" height="900">
+          <div>
+            <span class="label">Exp. 002 · Build</span>
+            <h3>I gave Claude my kitchen shelves</h3>
+            <p>What's in the fridge, what's for dinner and what to buy, all from one page. Claude and I both edit it.</p>
+            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">3 skills</span><span class="chip soon">Plugin soon</span></div>
+          </div>
+        </article>
+        <article class="exp">
+          <img src="img/exp-001-wardrobe.jpg" alt="Exp. 001 cover: I gave Claude a memory of my wardrobe" loading="lazy" width="720" height="900">
+          <div>
+            <span class="label">Exp. 001 · Build</span>
+            <h3>I gave Claude a memory of my wardrobe</h3>
+            <p>Chatbots forget my clothes the moment the chat ends. This one knows what I own, what I've worn and what's missing.</p>
+            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">5 skills</span><span class="chip soon">Plugin soon</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="steal">
+      <span class="label">Steal this</span>
+      <h2 id="steal">Run the plugins yourself</h2>
+      <div class="steal">
+        <div class="term" role="group" aria-label="Install commands for Claude Code">
+          <div><span class="c"># in Claude Code</span></div>
+          <div><span class="p">&gt; </span>/plugin marketplace add benchlog-ai/plugins</div>
+          <div><span class="p">&gt; </span>/plugin install wardrobe-tracker@benchlog</div>
+        </div>
+        <p class="note"><strong>Getting them ready.</strong> Each plugin is being cleaned up so it sets up a fresh page with your own data the first time you run it. They'll go up on GitHub one at a time. Follow on Instagram to hear when each is live.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="links">
+      <a href="https://www.instagram.com/benchlog.ai/">Instagram</a>
+      <a href="https://github.com/benchlog-ai">GitHub</a>
+      <a href="mailto:benchlog.ai@gmail.com">benchlog.ai@gmail.com</a>
+    </div>
+    <p class="small">Built with Claude. Sample data is labelled on screen.</p>
+  </footer>
+
+</div>
+</body>
+</html>
