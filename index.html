@@ -92,19 +92,28 @@ h2 { margin: 10px 0 24px; font: 800 clamp(30px, 6vw, 42px)/1.05 var(--f-display)
 
 /* the log */
 .log { display: grid; gap: 18px; }
-@media (min-width: 640px) { .log { grid-template-columns: repeat(2, 1fr); } }
-.exp { display: grid; gap: 14px; align-content: start; background: var(--panel); border: 1.5px solid var(--ink); border-radius: 14px; padding: 14px; }
-.exp img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border-radius: 8px; border: 1px solid var(--line); background: #EEF0EA; }
+@media (min-width: 640px) { .log { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.exp { min-width: 0; display: grid; gap: 14px; align-content: start; background: var(--panel); border: 1.5px solid var(--ink); border-radius: 14px; padding: 14px; }
+.exp img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: #EEF0EA; }
 .exp h3 { margin: 6px 0 6px; font: 800 clamp(19px, 4.6vw, 24px)/1.12 var(--f-display); letter-spacing: -.015em; text-wrap: balance; }
 .exp p { margin: 0 0 12px; font-size: 15px; color: var(--ink2); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font: 600 11px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 6px 8px; border-radius: 5px; border: 1px solid var(--line); color: var(--ink2); }
-.chip.soon { border-color: var(--pen); color: var(--pen); }
+.chip.live { border-color: var(--pass); color: var(--pass); }
+.get { display: grid; gap: 10px; margin-top: 14px; }
+.cmd { min-width: 0; display: flex; align-items: center; gap: 8px; background: #16202B; color: #E4E9EE; border: 1px solid #4A5866; border-radius: 8px; padding: 6px 6px 6px 12px; font: 400 12.5px/1.4 var(--f-mono); }
+.cmd code { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.cmd code::before { content: "> "; color: #F5D33F; }
+.copy { flex: none; min-height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid #4A5866; background: transparent; color: #E4E9EE; font: 600 11px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.copy:hover { border-color: #F5D33F; }
+.src { justify-self: start; font: 600 13px/1 var(--f-mono); text-decoration-color: var(--hl); text-decoration-thickness: 3px; text-underline-offset: 4px; white-space: nowrap; }
 
 /* steal */
 .steal { display: grid; gap: 18px; }
 @media (min-width: 820px) { .steal { grid-template-columns: 1fr 1fr; align-items: start; } }
-.term { background: #16202B; color: #E4E9EE; border-radius: 12px; padding: 18px; font: 400 14px/1.7 var(--f-mono); overflow-x: auto; white-space: pre; border: 1.5px solid #16202B; }
+.term { background: #16202B; color: #E4E9EE; border-radius: 12px; padding: 18px; font: 400 14px/1.7 var(--f-mono); overflow-x: auto; border: 1.5px solid #16202B; }
+.term > div { white-space: pre; }
+.term > .gap { height: .9em; }
 .term .c { color: #8DB4DE; }
 .term .p { color: #F5D33F; user-select: none; }
 .note { font-size: 15px; color: var(--ink2); }
@@ -116,6 +125,9 @@ footer { border-top: 1.5px solid var(--ink); padding-block: 32px 48px; display: 
 .links { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 600 14px/1.4 var(--f-mono); }
 .links a { text-decoration-color: var(--hl); text-decoration-thickness: 3px; text-underline-offset: 4px; }
 .small { font: 400 12px/1.6 var(--f-mono); color: var(--ink2); margin: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.note p { margin: 0; }
+.btn.copy-all { cursor: pointer; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -137,10 +149,11 @@ footer { border-top: 1.5px solid var(--ink); padding-block: 32px 48px; display: 
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
             Follow @benchlog.ai
           </a>
-          <a class="btn ghost" href="https://github.com/benchlog-ai" rel="me">
+          <a class="btn ghost" href="https://github.com/benchlog-ai/plugins">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
             Plugins on GitHub
           </a>
+          <a class="sr-only" href="https://github.com/benchlog-ai" rel="me">GitHub profile</a>
         </div>
       </div>
       <div class="phone">
@@ -162,42 +175,58 @@ footer { border-top: 1.5px solid var(--ink); padding-block: 32px 48px; display: 
     <section aria-labelledby="log">
       <span class="label">The log</span>
       <h2 id="log">Experiments so far</h2>
-      <p class="intro-p">Each one is a Reel and a carousel on Instagram. Newest first.</p>
+      <p class="intro-p">Each one is a Claude plugin you can install, plus a Reel and a carousel on Instagram. The pictures are the plugins' own pages, with my data. Newest first.</p>
       <div class="log">
         <article class="exp">
-          <img src="img/exp-004-gourmet.jpg" alt="Exp. 004 cover: I gave Claude my food photos" loading="lazy" width="720" height="900">
+          <img src="img/product-gourmet.jpg" alt="Gourmet Trails, the plugin's page: restaurant cards built from my own dish photos, and a Best of list of four places." loading="lazy" width="1600" height="1000">
           <div>
             <span class="label">Exp. 004 · Build</span>
             <h3>I gave Claude my food photos</h3>
             <p>1,943 food photos and not one restaurant name. Now each meal is named and dated from the photo, with a wishlist and lists I can send a friend.</p>
-            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">6 skills</span><span class="chip soon">Plugin soon</span></div>
+            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">6 skills</span><span class="chip live">Live</span></div>
+            <div class="get">
+              <div class="cmd"><code>/plugin install gourmet-trails@benchlog</code><button class="copy" type="button" data-copy="/plugin install gourmet-trails@benchlog" aria-label="Copy install command for gourmet-trails">Copy</button></div>
+              <a class="src" href="https://github.com/benchlog-ai/plugins/tree/main/plugins/gourmet-trails">Read the skills on GitHub →</a>
+            </div>
           </div>
         </article>
         <article class="exp">
-          <img src="img/exp-003-footprints.jpg" alt="Exp. 003 cover: I gave Claude my travel map" loading="lazy" width="720" height="900">
+          <img src="img/product-footprints.jpg" alt="Footprints, the plugin's page: a globe with four pinned places, and a bucket list of illustrated postcards." loading="lazy" width="1600" height="1000">
           <div>
             <span class="label">Exp. 003 · Build</span>
             <h3>I gave Claude my travel map</h3>
             <p>Where I've been, where I want to go and what to book were spread across notes, a camera roll and a pile of tabs. Now they're one map, plus trip plans.</p>
-            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">6 skills</span><span class="chip soon">Plugin soon</span></div>
+            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">6 skills</span><span class="chip live">Live</span></div>
+            <div class="get">
+              <div class="cmd"><code>/plugin install footprints@benchlog</code><button class="copy" type="button" data-copy="/plugin install footprints@benchlog" aria-label="Copy install command for footprints">Copy</button></div>
+              <a class="src" href="https://github.com/benchlog-ai/plugins/tree/main/plugins/footprints">Read the skills on GitHub →</a>
+            </div>
           </div>
         </article>
         <article class="exp">
-          <img src="img/exp-002-larder.jpg" alt="Exp. 002 cover: I gave Claude my kitchen shelves" loading="lazy" width="720" height="900">
+          <img src="img/product-larder.jpg" alt="Larder, the plugin's page with its sample kitchen: drawn pantry shelves with fill levels, and a week of planned dinners." loading="lazy" width="1600" height="1000">
           <div>
             <span class="label">Exp. 002 · Build</span>
             <h3>I gave Claude my kitchen shelves</h3>
             <p>What's in the fridge, what's for dinner and what to buy, all from one page. Claude and I both edit it.</p>
-            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">3 skills</span><span class="chip soon">Plugin soon</span></div>
+            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">3 skills</span><span class="chip live">Live</span></div>
+            <div class="get">
+              <div class="cmd"><code>/plugin install larder@benchlog</code><button class="copy" type="button" data-copy="/plugin install larder@benchlog" aria-label="Copy install command for larder">Copy</button></div>
+              <a class="src" href="https://github.com/benchlog-ai/plugins/tree/main/plugins/larder">Read the skills on GitHub →</a>
+            </div>
           </div>
         </article>
         <article class="exp">
-          <img src="img/exp-001-wardrobe.jpg" alt="Exp. 001 cover: I gave Claude a memory of my wardrobe" loading="lazy" width="720" height="900">
+          <img src="img/product-wardrobe.jpg" alt="My Wardrobe, the plugin's page: a colour palette of 27 pieces as swatch cards, and ranked suggestions of what to buy next." loading="lazy" width="1600" height="1000">
           <div>
             <span class="label">Exp. 001 · Build</span>
             <h3>I gave Claude a memory of my wardrobe</h3>
             <p>Chatbots forget my clothes the moment the chat ends. This one knows what I own, what I've worn and what's missing.</p>
-            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">5 skills</span><span class="chip soon">Plugin soon</span></div>
+            <div class="chips"><span class="chip">Claude plugin</span><span class="chip">5 skills</span><span class="chip live">Live</span></div>
+            <div class="get">
+              <div class="cmd"><code>/plugin install wardrobe-tracker@benchlog</code><button class="copy" type="button" data-copy="/plugin install wardrobe-tracker@benchlog" aria-label="Copy install command for wardrobe-tracker">Copy</button></div>
+              <a class="src" href="https://github.com/benchlog-ai/plugins/tree/main/plugins/wardrobe-tracker">Read the skills on GitHub →</a>
+            </div>
           </div>
         </article>
       </div>
@@ -208,11 +237,19 @@ footer { border-top: 1.5px solid var(--ink); padding-block: 32px 48px; display: 
       <h2 id="steal">Run the plugins yourself</h2>
       <div class="steal">
         <div class="term" role="group" aria-label="Install commands for Claude Code">
-          <div><span class="c"># in Claude Code</span></div>
+          <div><span class="c"># once, in Claude Code</span></div>
           <div><span class="p">&gt; </span>/plugin marketplace add benchlog-ai/plugins</div>
+          <div class="gap"></div>
+          <div><span class="c"># then any of these</span></div>
           <div><span class="p">&gt; </span>/plugin install wardrobe-tracker@benchlog</div>
+          <div><span class="p">&gt; </span>/plugin install larder@benchlog</div>
+          <div><span class="p">&gt; </span>/plugin install footprints@benchlog</div>
+          <div><span class="p">&gt; </span>/plugin install gourmet-trails@benchlog</div>
         </div>
-        <p class="note"><strong>Getting them ready.</strong> Each plugin is being cleaned up so it sets up a fresh page with your own data the first time you run it. They'll go up on GitHub one at a time. Follow on Instagram to hear when each is live.</p>
+        <div class="note">
+          <p><strong>All four are live.</strong> Add the marketplace once, then install the ones you want. The first time you use one, Claude makes a fresh private page for it in your own account, empty and ready for your data. Nothing is sent to Bench Log.</p>
+          <div class="ctas"><a class="btn solid" href="https://github.com/benchlog-ai/plugins">Plugins on GitHub</a><button class="btn ghost copy-all" type="button" data-copy="/plugin marketplace add benchlog-ai/plugins">Copy the first line</button></div>
+        </div>
       </div>
     </section>
   </main>
@@ -227,5 +264,14 @@ footer { border-top: 1.5px solid var(--ink); padding-block: 32px 48px; display: 
   </footer>
 
 </div>
+<script>
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const label = b.textContent;
+  try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = "Copied"; }
+  catch (err) { b.textContent = "Select and copy"; }
+  setTimeout(() => { b.textContent = label; }, 1600);
+});
+</script>
 </body>
 </html>
